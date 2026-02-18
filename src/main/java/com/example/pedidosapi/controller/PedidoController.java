@@ -1,8 +1,11 @@
 package com.example.pedidosapi.controller;
 
+import com.example.pedidosapi.dto.CriarPedidoRequestDto;
+import com.example.pedidosapi.dto.PedidoResponseDto;
 import com.example.pedidosapi.entity.Pedido;
 import com.example.pedidosapi.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +19,11 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping
-    public Pedido criar(
-            @RequestBody Pedido pedido) {
-        return pedidoService.criarPedido(pedido);
-    }
+//    public ResponseEntity<PedidoResponseDto> criar(
+//            @RequestBody CriarPedidoRequestDto dto) {
+//        PedidoResponseDto responseDto = pedidoService.criarPedido(dto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+//    }
 
     @GetMapping
     public List<Pedido> listarPedidos(
@@ -44,7 +48,8 @@ public class PedidoController {
 
     @DeleteMapping("/{id}")
     public void deletarPedido(@PathVariable Long id) {
-        pedidoService.deletarPedido(id);
+        pedidoService.
+                deletarPedido(id);
     }
 
 }
