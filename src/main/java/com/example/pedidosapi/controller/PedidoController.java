@@ -1,11 +1,14 @@
 package com.example.pedidosapi.controller;
 
-import com.example.pedidosapi.entity.Pedido;
+import com.example.pedidosapi.dto.CriarPedidoRequest;
+import com.example.pedidosapi.dto.PedidoResponse;
+import com.example.pedidosapi.entity.StatusPedido;
 import com.example.pedidosapi.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -16,36 +19,55 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @PostMapping
-    public Pedido criar(
-            @RequestBody Pedido pedido) {
-        return pedidoService.criarPedido(pedido);
+    public ResponseEntity<Void> criarPedido(@RequestBody CriarPedidoRequest request) {
+        Long id = pedidoService.criarPedido(request.getDescrição());
+        return ResponseEntity.
+                created(URI.create("/pedidos/" + id))
+                .build();
     }
 
     @GetMapping
-    public List<Pedido> listarPedidos(
-            @RequestParam(required = false) String status) {
+    public List<PedidoResponse> listarPedidos(
+            @RequestParam(required = false) StatusPedido status) {
 
-        if (status != null){
+        if (status != null) {
             return pedidoService.listarPorStatus(status);
         }
         return pedidoService.listarPedidos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> buscar(@PathVariable Long id) {
-        Pedido pedido = pedidoService.getPedidoById(id);
-        return ResponseEntity.ok(pedido);
+    public ResponseEntity<PedidoResponse> buscarPedido(@PathVariable Long id) {
+        return ResponseEntity.ok(pedidoService.buscarPorId(id));
     }
 
-    @PutMapping("/{id}")
-    public Pedido atualizar(@PathVariable Long id, @RequestBody Pedido pedido) {
-        return pedidoService.atualizarPedido(id, pedido);
+    @PostMapping("/{id}/pagar")
+    public ResponseEntity<Void> pagarPedido(@PathVariable Long id) {
+        pedidoService.pagarPedido(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
-    public void deletarPedido(@PathVariable Long id) {
-        pedidoService.deletarPedido(id);
+    @PostMapping("/{id}/preparar")
+    public ResponseEntity<Void> prepararPedido(@PathVariable Long id) {
+        pedidoService.iniciarPreparacaoPedido(id);
+        return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/enviar")
+    public ResponseEntity<Void> enviarPedido(@PathVariable Long id) {
+        pedidoService.enviarPedido(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/entregar")
+    public ResponseEntity<Void> entregarPedido(@PathVariable Long id) {
+        pedidoService.entregarPedido(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelarPedido(@PathVariable Long id) {
+        pedidoService.cancelarPedido(id);
+        return ResponseEntity.noContent().build();
+    }
 }
-
