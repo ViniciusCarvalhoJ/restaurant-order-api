@@ -21,8 +21,11 @@ public class CarrinhoItem {
     @GeneratedValue
     private Long id;
     private Long produtoId;
+    private Long carrinho_id;
     private Integer quantidade;
-    private BigDecimal preco;
+    private BigDecimal precoUnitario;
     private String nome;
+
+    public CarrinhoItem(Long id, Long produtoId, String nome, BigDecimal preco, int quantidade) {}
 }
 

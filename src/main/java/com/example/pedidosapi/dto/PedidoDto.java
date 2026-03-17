@@ -22,7 +22,13 @@ public class PedidoDto {
 
         public static PedidoDto converterPedido(Pedido pedido) {
                 PedidoDto dto = new PedidoDto();
-                dto.id = pedido.getId();
+
+                dto.setId(pedido.getId());
+                dto.getUserId();
+                dto.setEnderecoEntrega(pedido.getEnderecoEntrega());
+                dto.setFormaPagamento(pedido.getFormaPagamento().name());
+                dto.setValorTotal(pedido.getTotal().doubleValue());
+
                 return dto;
         }
 }

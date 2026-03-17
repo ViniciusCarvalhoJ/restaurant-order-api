@@ -29,4 +29,5 @@ public class ItemPedido {
     private BigDecimal precoUnitario;
     private BigDecimal subTotal;
 
+    public ItemPedido(String nome, Integer quantidade, BigDecimal precoUnitario) {}
 }

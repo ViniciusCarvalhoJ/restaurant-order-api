@@ -25,23 +25,19 @@ public class CarrinhoService {
     }
 
     //!“Me dá o carrinho desse usuário… se não existir, cria um novo e já salva no banco.”
-    public Carrinho getOrCreateCart(Long userId) {
-        return carrinhoRepository.findByUsuarioId(userId).orElseGet(() -> {
+    public Carrinho getOrCreateCart(Long usuarioId) {
+        return carrinhoRepository.findByUsuarioId(usuarioId).orElseGet(() -> {
             Carrinho carrinho = new Carrinho();
-            carrinho.setUserId(userId);
+            carrinho.setUsuarioId(usuarioId);
             carrinho.setTotal(BigDecimal.ZERO);
             return carrinhoRepository.save(carrinho);
         });
     }
 
     @Transactional
-    public Carrinho adicionarItem(Long userId, Long produtoId, int quantidade) {
+    public Carrinho adicionarItem(Long usuarioId, Long produtoId, int quantidade) {
 
-        Carrinho carrinho = getOrCreateCart(userId);
-
-        if (quantidade <= 0) {
-            throw new IllegalArgumentException("Quantidade deve ser maior que zero");
-        }
+        Carrinho carrinho = getOrCreateCart(usuarioId);
 
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
@@ -52,60 +48,30 @@ public class CarrinhoService {
 
         carrinho.addItem(produto, quantidade);
 
-        return carrinhoRepository.save(carrinho);
+        return carrinho;  // dirty checking resolve
     }
 
-    public Carrinho obterCarrinhoComItens(Long userId) {
-        return getOrCreateCart(userId);
+    public Carrinho obterCarrinhoComItens(Long usuarioId) {
+        return getOrCreateCart(usuarioId);
     }
 
     @Transactional
-    public PedidoDto criarPedido(Long userId, String enderecoEntrega, String formaPagamento) {
+    public PedidoDto criarPedido(Long usuarioId, String enderecoEntrega, String formaPagamento) {
 
-        Carrinho carrinho = getOrCreateCart(userId);
+        Carrinho carrinho = getOrCreateCart(usuarioId);
 
-        if (carrinho.getItens().isEmpty()) {
-            throw new IllegalStateException("Carrinho vazio. Adicione itens antes de criar um pedido.");
+        Pedido pedido = carrinho.gerarPedido(enderecoEntrega, FormaPagamento.valueOf(formaPagamento));
+
+        //debitar estoque e salvar itens do pedido
+        for (   CarrinhoItem item : carrinho.getItens()) {
+            Produto produto = produtoRepository.findById(item.getProdutoId()).orElseThrow();
+
+            produto.debitarEstoque(item.getQuantidade());
         }
 
-        Pedido pedido = new Pedido();
-        pedido.setUserId(userId);
-        pedido.setEnderecoEntrega(enderecoEntrega);
-        pedido.setFormaPagamento(FormaPagamento.valueOf(formaPagamento));
-        //pedido.setStatus("PENDENTE");
-        pedido.setDataCriacao(LocalDateTime.now());
-        pedido.setTotal(carrinho.getTotal());
+        carrinho.limpar();
 
-        // Copiar itens do carrinho para o pedido
-        for (CarrinhoItem itemCarrinho : carrinho.getItens()) {
-
-            ItemPedido itemPedido = new ItemPedido();
-            itemPedido.setNomeProduto(itemCarrinho.getNome());
-            itemPedido.setQuantidade(itemCarrinho.getQuantidade());
-            itemPedido.setPrecoUnitario(itemCarrinho.getPreco());
-
-            BigDecimal subtotal =
-                    itemCarrinho.getPreco()
-                            .multiply(BigDecimal.valueOf(itemCarrinho.getQuantidade()));
-
-            itemPedido.setSubTotal(subtotal);
-
-            pedido.getItens().add(itemPedido);
-
-            Produto produto = produtoRepository.findById(itemCarrinho.getProdutoId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-            produto.debitarEstoque(itemCarrinho.getQuantidade());
-            produtoRepository.save(produto);
-        }
-        Pedido salvo = pedidoRepository.save(pedido);
-
-        //LimparCarrinho
-        carrinho.getItens().clear();
-        carrinho.setTotal(BigDecimal.ZERO);
-        carrinhoRepository.save(carrinho);
-
-        return PedidoDto.converterPedido(salvo);
+        return PedidoDto.converterPedido(pedidoRepository.save(pedido));
     }
 }
 

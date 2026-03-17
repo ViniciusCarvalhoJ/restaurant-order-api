@@ -3,7 +3,6 @@ package com.example.pedidosapi.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -12,11 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Setter
 @Table(name = "pedidos")
 @AllArgsConstructor
-@NoArgsConstructor
 @Entity
+@Setter
 public class Pedido {
 
     @Id
@@ -29,12 +27,12 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     private StatusPedido status;
 
-    public BigDecimal total;
+    private BigDecimal total;
 
-    public String enderecoEntrega;
+    private String enderecoEntrega;
 
     @Enumerated(EnumType.STRING)
-    public FormaPagamento formaPagamento;
+    private FormaPagamento formaPagamento;
 
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
@@ -44,8 +42,12 @@ public class Pedido {
 
     private String descricao;
 
-    public Pedido(StatusPedido status) {
+    public Pedido() {
         this.status = StatusPedido.CRIADO;
+    }
+
+    public void atualizarDescricao(String descricao){
+        this.descricao = descricao;
     }
 
     public void pagar(){
@@ -74,5 +76,12 @@ public class Pedido {
             throw new IllegalStateException("Pedido nao pode ser entregue.");
         }
         this.status = StatusPedido.ENTREGUE;
+    }
+
+    public void cancelar(){
+        if(this.status == StatusPedido.ENTREGUE){
+            throw new IllegalStateException("Pedido nao pode ser cancelado.");
+        }
+        this.status = StatusPedido.CANCELADO;
     }
 }

@@ -9,9 +9,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PedidoResponseDto {
+public class CriarPedidoRequest {
 
-    public Long id;
-    public String descricao;
-    public String status;
+    private String enderecoEntrega;
+    private String formaPagamento;
+    private String descrição;
+
 }
