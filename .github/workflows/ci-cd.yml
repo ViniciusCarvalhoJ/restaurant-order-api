@@ -41,6 +41,3 @@ jobs:
         with:
           name: app-jar
           path: target/*.jar
-
-      - name: Build Docker image
-        run: docker build -t restaurant-api .
