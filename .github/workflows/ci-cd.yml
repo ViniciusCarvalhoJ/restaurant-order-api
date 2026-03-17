@@ -1,4 +1,4 @@
-name: CI/CD Pipeline Restaurante
+name: CI Pipeline Restaurante
 
 on:
   push:
@@ -7,10 +7,19 @@ on:
     branches: [ main ]
 
 jobs:
-
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
 
     steps:
 
@@ -24,8 +33,14 @@ jobs:
           java-version: 21
           cache: maven
 
-      - name: Build project
-        run: mvn -B clean package
+      - name: Build and Test
+        run: mvn -B clean verify
 
-      - name: Run tests
-        run: mvn test
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+
+      - name: Build Docker image
+        run: docker build -t restaurant-api .
