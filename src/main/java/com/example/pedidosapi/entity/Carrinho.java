@@ -1,5 +1,6 @@
 package com.example.pedidosapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,18 +22,23 @@ public class Carrinho {
     @Id
     @GeneratedValue
     private Long id;
+
     private Long usuarioId = 1L; //!Simulação de usuário fixo
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "carrinho_id")
+    @JsonIgnore
     private List<CarrinhoItem> itens = new ArrayList<>();
+
     private BigDecimal total = BigDecimal.ZERO;
+
     private LocalDateTime createdAt;
 
     //TODO: Metodo que recalcula estado interno NÃO recebe parâmetros.
     public void recalcularTotal() {
         this.total = this.itens.stream()
                 .map(item -> item.getPrecoUnitario()
-                            .multiply(BigDecimal.valueOf(item.getQuantidade())))
+                        .multiply(BigDecimal.valueOf(item.getQuantidade())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -73,8 +79,8 @@ public class Carrinho {
         this.total = BigDecimal.ZERO;
     }
 
-    public Pedido gerarPedido(String enderecoEntrega, FormaPagamento formaPagamento){
-        if(this.itens.isEmpty()){
+    public Pedido gerarPedido(String enderecoEntrega, FormaPagamento formaPagamento) {
+        if (this.itens.isEmpty()) {
             throw new IllegalArgumentException("Carrinho vazio.");
         }
 
@@ -85,7 +91,7 @@ public class Carrinho {
         pedido.setDataCriacao(LocalDateTime.now());
         pedido.setTotal(this.total);
 
-        for (CarrinhoItem item : this.itens){
+        for (CarrinhoItem item : this.itens) {
             ItemPedido itemPedido = new ItemPedido(
                     item.getNome(),
                     item.getQuantidade(),
@@ -96,7 +102,6 @@ public class Carrinho {
 
         return pedido;
     }
-
 
 
 }
