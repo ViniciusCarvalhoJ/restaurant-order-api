@@ -9,6 +9,7 @@ import com.example.pedidosapi.service.CarrinhoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +37,7 @@ public class CarrinhoController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Carrinho não encontrado.")
             }
     )
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CarrinhoResponse> getCarrinho() {
         Carrinho carrinho = carrinhoService.getOrCreateCart(getCurrentUserId());
         return ResponseEntity.ok(new CarrinhoResponse(carrinho));
@@ -50,7 +51,7 @@ public class CarrinhoController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados enviados.")
             }
     )
-    @PostMapping("/adicionar-item")
+    @PostMapping(value = "/adicionar-item", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CarrinhoResponse> adicionarItem(@RequestBody AddItemRequest request) {
         Carrinho carrinho = carrinhoService.adicionarItem(
                 getCurrentUserId(),
@@ -68,7 +69,7 @@ public class CarrinhoController {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados enviados.")
             }
     )
-    @PostMapping("/finalizar")
+    @PostMapping(value = "/finalizar", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PedidoDto> finalizarCarrinho(@RequestBody CriarPedidoRequest request) {
         PedidoDto pedido = carrinhoService.criarPedido(
                 getCurrentUserId(),

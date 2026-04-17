@@ -26,12 +26,17 @@ public class CarrinhoService {
 
     //!“Me dá o carrinho desse usuário… se não existir, cria um novo e já salva no banco.”
     public Carrinho getOrCreateCart(Long usuarioId) {
-        return carrinhoRepository.findByUsuarioId(usuarioId).orElseGet(() -> {
-            Carrinho carrinho = new Carrinho();
-            carrinho.setUsuarioId(usuarioId);
-            carrinho.setTotal(BigDecimal.ZERO);
-            return carrinhoRepository.save(carrinho);
-        });
+        System.out.println("Buscando carrinho para o usuário: " + usuarioId);
+        return carrinhoRepository.findByUsuarioId(usuarioId)
+                .orElseGet(() -> {
+                    System.out.println("Carrinho não encontrado. Criando novo carrinho...");
+                    Carrinho novoCarrinho = new Carrinho();
+                    novoCarrinho.setUsuarioId(usuarioId);
+                    novoCarrinho.setTotal(BigDecimal.ZERO);
+                    Carrinho salvo = carrinhoRepository.save(novoCarrinho);
+                    System.out.println("Novo carrinho salvo: " + salvo);
+                    return salvo;
+                });
     }
 
     @Transactional

@@ -1,10 +1,19 @@
 package com.example.pedidosapi.dto;
 
 import com.example.pedidosapi.entity.Carrinho;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CarrinhoResponse {
 
     private Long id;

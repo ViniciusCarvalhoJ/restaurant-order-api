@@ -2,29 +2,28 @@ package com.example.pedidosapi.controller;
 
 import com.example.pedidosapi.dto.PedidoDto;
 import com.example.pedidosapi.entity.Carrinho;
-import com.example.pedidosapi.repository.CarrinhoRepository;
-import com.example.pedidosapi.repository.PedidoRepository;
-import com.example.pedidosapi.repository.ProdutoRepository;
+import com.example.pedidosapi.entity.CarrinhoItem;
 import com.example.pedidosapi.service.CarrinhoService;
-import org.junit.jupiter.api.MediaType;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(CarrinhoController.class)
 class CarrinhoControllerTest {
 
     @Autowired
@@ -33,69 +32,56 @@ class CarrinhoControllerTest {
     @MockitoBean
     private CarrinhoService carrinhoService;
 
-    @Mock
-    private CarrinhoRepository carrinhoRepository;
-
-    @Mock
-    private ProdutoRepository produtoRepository;
-
-    @Mock
-    private PedidoRepository pedidoRepository;
-
-    @InjectMocks
-    private CarrinhoService service;
-
-
-
-
     @Test
     void getCarrinho_deveRetornarCarrinho_quandoSucesso() throws Exception {
-
-        // ======================
-        // ARRANGE (preparar)
-        // ======================
+        // Arrange - Crie o carrinho de forma mais completa
         Carrinho carrinho = new Carrinho();
+        carrinho.setId(1L);
+        carrinho.setUsuarioId(1L);
+        carrinho.setTotal(BigDecimal.valueOf(150.00));
 
-        when(carrinhoService.getOrCreateCart(anyLong()))
-                .thenReturn(carrinho);
+        // Inicialize a lista de itens para evitar null
+        carrinho.setItens(new ArrayList<>());
 
-        // ======================
-        // ACT (executar)
-        // ======================
-        mockMvc.perform(get("/carrinho"))
+        CarrinhoItem item = new CarrinhoItem(null, 100L, "Produto Teste", BigDecimal.valueOf(99.90), 3);
+        carrinho.getItens().add(item);
 
-                // ======================
-                // ASSERT (validar)
-                // ======================
-                .andExpect(status().isOk());
+        when(carrinhoService.getOrCreateCart(anyLong())).thenReturn(carrinho);
 
-        // verifica se o service foi chamado
-        verify(carrinhoService).getOrCreateCart(anyLong());
+        // Act + Assert
+        mockMvc.perform(get("/carrinho")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.total").value(150.00));
+
+        //verify(carrinhoService).getOrCreateCart(anyLong());
     }
 
     @Test
     void finalizarCarrinho_deveCriarPedido_quandoDadosValidos() throws Exception {
+        // Arrange
+        PedidoDto pedidoDto = new PedidoDto(); // preencha campos se necessário
 
-        // ARRANGE
-        PedidoDto pedido = new PedidoDto();
-
-        when(carrinhoService.criarPedido(anyLong(), anyString(), any()))
-                .thenReturn(pedido);
+        when(carrinhoService.criarPedido(anyLong(), anyString(), anyString()))
+                .thenReturn(pedidoDto);
 
         String json = """
-        {
-            "enderecoEntrega": "Rua A",
-            "formaPagamento": "CARTAO"
-        }
-    """;
+                {
+                    "enderecoEntrega": "Rua A, 123",
+                    "formaPagamento": "CARTAO"
+                }
+                """;
 
-        // ACT + ASSERT
+        // Act + Assert
         mockMvc.perform(post("/carrinho/finalizar")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());
 
-        verify(carrinhoService)
-                .criarPedido(anyLong(), anyString(), any());
+        verify(carrinhoService).criarPedido(anyLong(), anyString(), anyString());
     }
 }
